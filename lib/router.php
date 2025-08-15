@@ -15,24 +15,23 @@ final class Router {
         $path = $_SERVER['REQUEST_URI'];
         $callback = Router::$paths[$path];
 
-        if($callback == null) {
-            show_404();
-            return;
-        }
+        if($callback == null):
+            echo show_404();
+        else:
+            $parts = explode(".", $callback);
 
-        $parts = explode(".", $callback);
+            $reflectedController = new ReflectionClass("App\Controllers\\" . $parts[0]);
+            $controller = $reflectedController->newInstance();
 
-        $reflectedController = new ReflectionClass("App\Controllers\\" . $parts[0]);
-        $controller = $reflectedController->newInstance();
-
-        try {
-            echo call_user_func([$controller, $parts[1]]);
-        } catch (\Throwable $th) {
-            $message = $th->getMessage();
-            if(str_contains($message, 'Argument #1 ($callback) must be a valid callback')) {
-                echo "ERROR:: Controller $parts[0].$parts[1] method not found";
+            try {
+                echo call_user_func([$controller, $parts[1]]);
+            } catch (\Throwable $th) {
+                $message = $th->getMessage();
+                if(str_contains($message, 'Argument #1 ($callback) must be a valid callback')) {
+                    echo "ERROR:: Controller $parts[0].$parts[1] method not found";
+                }
+                // should handle error
             }
-            // should handle error
-        }
+        endif;
     }
 }
